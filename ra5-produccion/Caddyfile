@@ -1,10 +1,8 @@
 # ============================================================
 # OPCIÓN C (ESCUELA) — Certificado autofirmado local
-# Accesible desde cualquier PC de la misma red
-# Reemplaza la IP por la IP local de tu Raspberry:
-#   hostname -I   (ejecuta en la Raspberry para saber su IP)
+# Caddy genera un certificado para 'localhost' automáticamente
 # ============================================================
-:443 {
+localhost {
     tls internal
 
     reverse_proxy api_facial:5000 {
@@ -26,11 +24,6 @@
         output file /var/log/caddy/access.log
         format json
     }
-}
-
-# Redirige HTTP -> HTTPS
-:80 {
-    redir https://{host}{uri} permanent
 }
 
 # ============================================================
