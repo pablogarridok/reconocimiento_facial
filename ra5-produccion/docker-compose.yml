@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  api_facial:
+    build: ../aplicacion-facial/microservicio_facial
+    image: mi-api-facial:latest
+    container_name: api_facial
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Hardening de seguridad
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - production_net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./logs:/var/log/caddy
+    networks:
+      - production_net
+    depends_on:
+      - api_facial
+
+  uptime_kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime_kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    networks:
+      - production_net
+
+volumes:
+  caddy_data:
+  caddy_config:
+  uptime-kuma-data:
+
+networks:
+  production_net:
+    driver: bridge

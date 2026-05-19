@@ -4,3 +4,4 @@ python-multipart
 deepface
 tf-keras
 opencv-python-headless
+python-json-logger

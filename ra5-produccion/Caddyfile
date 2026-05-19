@@ -1,0 +1,61 @@
+# ============================================================
+# OPCIÓN C (ESCUELA) — Certificado autofirmado local
+# Accesible desde cualquier PC de la misma red
+# Reemplaza la IP por la IP local de tu Raspberry:
+#   hostname -I   (ejecuta en la Raspberry para saber su IP)
+# ============================================================
+:443 {
+    tls internal
+
+    reverse_proxy api_facial:5000 {
+        health_uri /health
+        health_interval 30s
+        health_timeout 10s
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
+
+# Redirige HTTP -> HTTPS
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+# ============================================================
+# OPCIÓN CON DOMINIO REAL (DuckDNS / Cloudflare Tunnel)
+# Descomenta estas líneas y comenta las de arriba cuando tengas
+# un dominio real con puertos 80 y 443 abiertos en el router
+# ============================================================
+#tudominio.duckdns.org {
+#    reverse_proxy api_facial:5000 {
+#        health_uri /health
+#        health_interval 30s
+#        health_timeout 10s
+#    }
+#
+#    header {
+#        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#        X-Frame-Options "SAMEORIGIN"
+#        X-Content-Type-Options "nosniff"
+#        Referrer-Policy "strict-origin-when-cross-origin"
+#        Content-Security-Policy "default-src 'self'"
+#        -Server
+#    }
+#
+#    log {
+#        output file /var/log/caddy/access.log
+#        format json
+#    }
+#}

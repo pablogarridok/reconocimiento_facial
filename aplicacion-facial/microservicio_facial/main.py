@@ -1,9 +1,54 @@
-from fastapi import FastAPI, File, UploadFile
-from deepface import DeepFace
-import shutil
+import logging
 import os
+import shutil
+from datetime import datetime
+
+from deepface import DeepFace
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from pythonjsonlogger import jsonlogger
+
+# Logging estructurado JSON
+log_handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+log_handler.setFormatter(formatter)
+logger = logging.getLogger()
+logger.addHandler(log_handler)
+logger.setLevel(logging.INFO)
 
 app = FastAPI()
+
+origins = [
+    "https://localhost",
+    # Añade aquí tu dominio real cuando lo tengas:
+    # "https://tudominio.duckdns.org",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+    max_age=3600,
+)
+
+
+@app.get("/health")
+def health_check():
+    logger.info("Health check endpoint called")
+    return {
+        "status": "ok",
+        "message": "API de reconocimiento facial operativa",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+    }
+
+
+@app.get("/ready")
+def readiness_check():
+    logger.info("Readiness check endpoint called")
+    return {"status": "ready"}
 
 @app.post("/verify")
 async def verify_img(img1: UploadFile = File(...), img2: UploadFile = File(...)):
@@ -23,7 +68,7 @@ async def verify_img(img1: UploadFile = File(...), img2: UploadFile = File(...))
             img2_path=path2,
             model_name="Facenet",
             detector_backend="opencv",
-            enforce_detection=False 
+            enforce_detection=False
         )
 
         return {
