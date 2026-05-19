@@ -9,7 +9,7 @@ services:
     environment:
       - LOG_LEVEL=INFO
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
